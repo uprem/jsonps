@@ -20,4 +20,8 @@ public class Utils {
         if(c=='\n') return true;
         return false;
     }
+    
+    public static boolean isDigit(char c) {
+        return (c>='0' && c<='9');
+    }
 }
