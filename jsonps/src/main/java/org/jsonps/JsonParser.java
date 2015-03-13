@@ -45,7 +45,8 @@ public class JsonParser {
 
     private static enum StringType {
         NAME,
-        VALUE
+        OBJ_VALUE,
+        ARR_VALUE
     }
 
     private ParserState parserState;
@@ -110,7 +111,7 @@ public class JsonParser {
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
                     parserState=ParserState.INSIDE_VALUE;
-                    strType=StringType.VALUE;
+                    strType=StringType.ARR_VALUE;
                     valType=vt;
                     break;
                 }
@@ -150,8 +151,16 @@ public class JsonParser {
                     // raise string event with string from buffer
                     if(strType==StringType.NAME) {
                         listener.name(new String(buf, 0, bufpos));
-                    } else {
+                        parserState=ParserState.EXPECTING_COLON;
+                    }
+                    else
+                    if(strType==StringType.OBJ_VALUE) {
                         listener.value(new String(buf, 0, bufpos));
+                        parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                    }
+                    else {
+                        listener.value(new String(buf, 0, bufpos));
+                        parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
                     }
                 }
                 else {
@@ -198,8 +207,11 @@ public class JsonParser {
                 if((vt=startOfValue(c))!=ValueType.NONE) {
                     parserState=ParserState.INSIDE_VALUE;
                     valType=vt;
-                    strType=StringType.VALUE;
+                    strType=StringType.OBJ_VALUE;
+                    bufpos=0;
+                    break;
                 }
+                raiseError(String.format("unexpected char:'%1$c'. expecting value", c));
                 break;
 
             case INSIDE_VALUE:
@@ -213,7 +225,9 @@ public class JsonParser {
                     parserState=ParserState.INSIDE_NAME;
                     strType=StringType.NAME;
                     bufpos=0;
+                    break;
                 }
+                raiseError(String.format("unexpected char:'%1$c'. expecting '\"'", c));
                 break;
 
         }
