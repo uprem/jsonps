@@ -54,10 +54,13 @@ public class JsonParser {
     private char[] buf=new char[10240];
     int bufpos;
     private StringType strType;
+    
+    private JsonParsingEventListener listener;
 
     private Stack<ParserState> psStack=new Stack<>();
 
-    public JsonParser() {
+    public JsonParser(JsonParsingEventListener listener) {
+        this.listener=listener;
         parserState=ParserState.EXPECTING_START_OBJECT_OR_ARRAY;
     }
 
@@ -70,11 +73,13 @@ public class JsonParser {
                 if(c=='{') {
                     psStack.push(parserState);
                     parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
+                    listener.startObject();
                     break;
                 }
                 if(c=='[') {
                     psStack.push(parserState);
                     parserState=ParserState.EXPECTING_END_ARRAY_OR_VALUE;
+                    listener.startArray();
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting '{' or '['", c));
@@ -84,6 +89,7 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='}') {
                     endObjectOrArray();
+                    listener.endObject();
                     break;
                 }
                 if(c=='"') {
@@ -99,6 +105,7 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==']') {
                     endObjectOrArray();
+                    listener.endArray();
                     break;
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
@@ -141,6 +148,11 @@ public class JsonParser {
                 if(c=='"') {
                     // end string;
                     // raise string event with string from buffer
+                    if(strType==StringType.NAME) {
+                        listener.name(new String(buf, 0, bufpos));
+                    } else {
+                        listener.value(new String(buf, 0, bufpos));
+                    }
                 }
                 else {
                     // append character to string buffer;
@@ -157,6 +169,7 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='}') {
                     endObjectOrArray();
+                    listener.endObject();
                     break;
                 }
                 if(c==',') {
@@ -170,6 +183,7 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==']') {
                     endObjectOrArray();
+                    listener.endArray();
                     break;
                 }
                 if(c==',') {
