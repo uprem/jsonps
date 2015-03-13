@@ -47,6 +47,7 @@ public class JsonParser {
     private int lexerStatus;
     private ValueType valType;
     private char[] buf=new char[10240];
+    int bufpos;
 
     private Stack<ParserState> psStack=new Stack<>();
 
@@ -98,6 +99,7 @@ public class JsonParser {
                 }
                 if(c=='"') {
                     parserState=ParserState.INSIDE_NAME;
+                    bufpos=0;
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting '}' or '\"'", c));
@@ -119,7 +121,6 @@ public class JsonParser {
             case EXPECTING_COLON:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==':') {
-                    psStack.push(parserState);
                     parserState=ParserState.EXPECTING_VALUE;
                     break;
                 }
@@ -151,6 +152,12 @@ public class JsonParser {
                 }
                 else {
                     // append character to string buffer;
+                    if(bufpos>=buf.length) {
+                        raiseError("too long a string encountered. can deal with 8K max");
+                        break;
+                    }
+                    buf[bufpos]=c;
+                    bufpos++;
                 }
                 break;
         }
