@@ -108,6 +108,24 @@ public class JsonParser {
             case EXPECTING_END_ARRAY_OR_VALUE:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==']') {
+                    ParserState ps;
+                    switch(ps=psStack.pop()) {
+                        case EXPECTING_START_OBJECT_OR_ARRAY:
+                            parserState=ParserState.EXPECTING_EOF;
+                            break;
+                        case EXPECTING_COLON:
+                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                            break;
+                        case EXPECTING_END_ARRAY_OR_VALUE:
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                            break;
+                        case EXPECTING_END_ARRAY_OR_COMA:
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                            break;
+                        default:
+                            raiseError("internal error.");
+                            logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
+                    }
                     break;
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
