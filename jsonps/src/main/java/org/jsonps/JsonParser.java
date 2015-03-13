@@ -24,10 +24,13 @@ public class JsonParser {
         EXPECTING_NAME,
         EXPECTING_COLON,
         EXPECTING_VALUE,
+        EXPECTING_COMA_IN_OBJECT,
+        EXPECTING_COMA_IN_ARRAY,
         EXPECTING_END_OBJECT_OR_COMA,
         EXPECTING_END_ARRAY_OR_COMA,
         INSIDE_NAME,
-        INSIDE_VALUE
+        INSIDE_VALUE,
+        EXPECTING_EOF
     }
 
     private static enum ValueType {
@@ -73,6 +76,24 @@ public class JsonParser {
             case EXPECTING_END_OBJECT_OR_NAME:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='}') {
+                    ParserState ps;
+                    switch(ps=psStack.pop()) {
+                        case EXPECTING_START_OBJECT_OR_ARRAY:
+                            parserState=ParserState.EXPECTING_EOF;
+                            break;
+                        case EXPECTING_COLON:
+                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                            break;
+                        case EXPECTING_END_ARRAY_OR_VALUE:
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                            break;
+                        case EXPECTING_END_ARRAY_OR_COMA:
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                            break;
+                        default:
+                            raiseError("internal error.");
+                            logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
+                    }
                     break;
                 }
                 if(c=='"') {
@@ -103,6 +124,24 @@ public class JsonParser {
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ':'", c));
+                break;
+
+            case EXPECTING_COMA_IN_OBJECT:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c==',') {
+                    parserState=ParserState.EXPECTING_NAME;
+                    break;
+                }
+                raiseError(String.format("unexpected char:'%1$c'. expecting ','", c));
+                break;
+
+            case EXPECTING_COMA_IN_ARRAY:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c==',') {
+                    parserState=ParserState.EXPECTING_VALUE;
+                    break;
+                }
+                raiseError(String.format("unexpected char:'%1$c'. expecting ','", c));
                 break;
 
             case INSIDE_NAME:
