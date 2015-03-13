@@ -1,0 +1,15 @@
+
+STATES:
+
+expectingStartObjectOrArray
+expectingEndObjectOrName
+expectingEndArrayOrValue
+expectingName
+expectingColon
+expectingValue
+expectingEndObjectOrComa
+expectingEndArrayOrComa
+
+insideName
+insideValue
+
