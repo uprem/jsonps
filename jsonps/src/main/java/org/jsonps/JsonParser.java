@@ -5,6 +5,7 @@
  */
 package org.jsonps;
 
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,6 +45,8 @@ public class JsonParser {
     private ValueType valType;
     private char[] buf=new char[10240];
 
+    private Stack<ParserState> psStack=new Stack<>();
+
     public JsonParser() {
         parserState=ParserState.EXPECTING_START_OBJECT_OR_ARRAY;
     }
@@ -55,10 +58,12 @@ public class JsonParser {
             case EXPECTING_START_OBJECT_OR_ARRAY:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='{') {
+                    psStack.push(parserState);
                     parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
                     break;
                 }
                 if(c=='[') {
+                    psStack.push(parserState);
                     parserState=ParserState.EXPECTING_END_ARRAY_OR_VALUE;
                     break;
                 }
@@ -88,6 +93,16 @@ public class JsonParser {
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or start of value", c));
+                break;
+
+            case EXPECTING_COLON:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c==':') {
+                    psStack.push(parserState);
+                    parserState=ParserState.EXPECTING_VALUE;
+                    break;
+                }
+                raiseError(String.format("unexpected char:'%1$c'. expecting ':'", c));
                 break;
 
             case INSIDE_NAME:
