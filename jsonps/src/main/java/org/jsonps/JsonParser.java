@@ -43,11 +43,17 @@ public class JsonParser {
         NONE
     }
 
+    private static enum StringType {
+        NAME,
+        VALUE
+    }
+
     private ParserState parserState;
     private int lexerStatus;
     private ValueType valType;
     private char[] buf=new char[10240];
     int bufpos;
+    private StringType strType;
 
     private Stack<ParserState> psStack=new Stack<>();
 
@@ -77,28 +83,12 @@ public class JsonParser {
             case EXPECTING_END_OBJECT_OR_NAME:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='}') {
-                    ParserState ps;
-                    switch(ps=psStack.pop()) {
-                        case EXPECTING_START_OBJECT_OR_ARRAY:
-                            parserState=ParserState.EXPECTING_EOF;
-                            break;
-                        case EXPECTING_COLON:
-                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
-                            break;
-                        case EXPECTING_END_ARRAY_OR_VALUE:
-                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                            break;
-                        case EXPECTING_END_ARRAY_OR_COMA:
-                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                            break;
-                        default:
-                            raiseError("internal error.");
-                            logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
-                    }
+                    endObjectOrArray();
                     break;
                 }
                 if(c=='"') {
                     parserState=ParserState.INSIDE_NAME;
+                    strType=StringType.NAME;
                     bufpos=0;
                     break;
                 }
@@ -108,28 +98,12 @@ public class JsonParser {
             case EXPECTING_END_ARRAY_OR_VALUE:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==']') {
-                    ParserState ps;
-                    switch(ps=psStack.pop()) {
-                        case EXPECTING_START_OBJECT_OR_ARRAY:
-                            parserState=ParserState.EXPECTING_EOF;
-                            break;
-                        case EXPECTING_COLON:
-                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
-                            break;
-                        case EXPECTING_END_ARRAY_OR_VALUE:
-                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                            break;
-                        case EXPECTING_END_ARRAY_OR_COMA:
-                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                            break;
-                        default:
-                            raiseError("internal error.");
-                            logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
-                    }
+                    endObjectOrArray();
                     break;
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
                     parserState=ParserState.INSIDE_VALUE;
+                    strType=StringType.VALUE;
                     valType=vt;
                     break;
                 }
@@ -178,6 +152,78 @@ public class JsonParser {
                     bufpos++;
                 }
                 break;
+
+            case EXPECTING_END_OBJECT_OR_COMA:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c=='}') {
+                    endObjectOrArray();
+                    break;
+                }
+                if(c==',') {
+                    parserState=ParserState.EXPECTING_NAME;
+                    break;
+                }
+                raiseError(String.format("unexpected char:'%1$c'. expecting '}' or ','", c));
+                break;
+
+            case EXPECTING_END_ARRAY_OR_COMA:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c==']') {
+                    endObjectOrArray();
+                    break;
+                }
+                if(c==',') {
+                    parserState=ParserState.EXPECTING_VALUE;
+                    break;
+                }
+                raiseError(String.format("unexpected char:'%1$c'. expecting '}' or ','", c));
+                break;
+
+            case EXPECTING_VALUE:
+                if(Utils.isWhiteSpace(c)) break;
+                if((vt=startOfValue(c))!=ValueType.NONE) {
+                    parserState=ParserState.INSIDE_VALUE;
+                    valType=vt;
+                    strType=StringType.VALUE;
+                }
+                break;
+
+            case INSIDE_VALUE:
+                parserState=ParserState.INSIDE_NAME;
+                process(c);
+                break;
+
+            case EXPECTING_NAME:
+                if(Utils.isWhiteSpace(c)) break;
+                if(c=='"') {
+                    parserState=ParserState.INSIDE_NAME;
+                    strType=StringType.NAME;
+                    bufpos=0;
+                }
+                break;
+
+        }
+    }
+
+    private void endObjectOrArray() {
+        ParserState ps;
+
+        switch(ps=psStack.pop()) {
+            case EXPECTING_START_OBJECT_OR_ARRAY:
+                parserState=ParserState.EXPECTING_EOF;
+                break;
+            case EXPECTING_COLON:
+                parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                break;
+            case EXPECTING_END_ARRAY_OR_VALUE:
+                parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                break;
+            case EXPECTING_END_ARRAY_OR_COMA:
+                parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                break;
+            default:
+                raiseError("internal error.");
+                logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
         }
     }
 
