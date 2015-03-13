@@ -89,6 +89,16 @@ public class JsonParser {
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or start of value", c));
                 break;
+
+            case INSIDE_NAME:
+                if(c=='"') {
+                    // end string;
+                    // raise string event with string from buffer
+                }
+                else {
+                    // append character to string buffer;
+                }
+                break;
         }
     }
 
