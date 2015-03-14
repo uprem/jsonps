@@ -47,4 +47,13 @@ public class JsonParsingEventListener {
     public void number(String value) {
         logger.log(Level.INFO, "got number:[{0}]", value);
     }
+
+    // below events are that primarily required for pretty printing?
+    public void colon() { // name and val separator
+        //logger.log(Level.INFO, "got colon");
+    }
+
+    public void comma() { // val separator
+        //logger.log(Level.INFO, "got comma");
+    }
 }

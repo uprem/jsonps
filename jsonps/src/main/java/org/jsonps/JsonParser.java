@@ -118,6 +118,7 @@ public class JsonParser {
                 if(Character.isWhitespace(c)) break;
                 if(c==':') {
                     parserState=ParserState.EXPECTING_VALUE;
+                    listener.colon();
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ':'", c));
@@ -168,6 +169,7 @@ public class JsonParser {
                 }
                 if(c==',') {
                     parserState=ParserState.EXPECTING_NAME;
+                    listener.comma();
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting '}' or ','", c));
@@ -182,6 +184,7 @@ public class JsonParser {
                 }
                 if(c==',') {
                     parserState=ParserState.EXPECTING_VALUE;
+                    listener.comma();
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or ','", c));
