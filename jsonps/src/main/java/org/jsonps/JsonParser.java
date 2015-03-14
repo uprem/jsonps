@@ -33,16 +33,6 @@ public class JsonParser {
         EXPECTING_EOF
     }
 
-    private static enum ValueType {
-        STRING,
-        OBJECT,
-        ARRAY,
-        TRUE,
-        FALSE,
-        NUMERIC,
-        NONE
-    }
-
     private static enum StringType {
         NAME,
         VALUE,
@@ -55,7 +45,6 @@ public class JsonParser {
 
     private ParserState parserState;
     private int lexerStatus;
-    private ValueType valType;
     private char[] buf=new char[10240];
     int bufpos;
     private StringType strType;
@@ -70,7 +59,6 @@ public class JsonParser {
     }
 
     public void process(char c) {
-        ValueType vt;
 
         switch(parserState) {
             case EXPECTING_START_OBJECT_OR_ARRAY:
@@ -115,11 +103,7 @@ public class JsonParser {
                     listener.endArray();
                     break;
                 }
-                if((vt=startOfValue(c))!=ValueType.NONE) {
-                    parserState=ParserState.EXPECTING_VALUE;
-                    process(c);
-                    break;
-                }
+                if(startOfValue(c)) break;
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or start of value", c));
                 break;
 
@@ -213,28 +197,7 @@ public class JsonParser {
 
             case EXPECTING_VALUE:
                 if(Utils.isWhiteSpace(c)) break;
-                if((vt=startOfValue(c))!=ValueType.NONE) {
-                    //parserState=ParserState.INSIDE_VALUE;
-                    valType=vt;
-                    if(valType==ValueType.OBJECT) {
-                        //psStack.push(parserState);
-                        ctStack.push(ContainingType.OBJECT);
-                        parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
-                        listener.startObject();
-                    }
-                    if(valType==ValueType.ARRAY) {
-                        //psStack.push(parserState);
-                        ctStack.push(ContainingType.ARRAY);
-                        parserState=ParserState.EXPECTING_END_ARRAY_OR_VALUE;
-                        listener.startArray();
-                    }
-                    if(valType==ValueType.STRING) {
-                        strType=StringType.VALUE;
-                        parserState=ParserState.INSIDE_VALUE;
-                        bufpos=0;
-                    }
-                    break;
-                }
+                if(startOfValue(c)) break;
                 raiseError(String.format("unexpected char:'%1$c'. expecting value", c));
                 break;
 
@@ -307,16 +270,37 @@ public class JsonParser {
         logger.log(Level.SEVERE, message);
     }
 
-    private ValueType startOfValue(char c) {
-        if(c=='"') return ValueType.STRING;
-        if(c=='{') return ValueType.OBJECT;
-        if(c=='[') return ValueType.ARRAY;
-        if(c=='t') return ValueType.TRUE;
-        if(c=='f') return ValueType.FALSE;
-        if(c=='T') return ValueType.TRUE;
-        if(c=='F') return ValueType.FALSE;
-        if(Utils.isDigit(c)) return ValueType.NUMERIC;
-        return ValueType.NONE;
+    private boolean startOfValue(char c) {
+        if(c=='"') {
+            strType=StringType.VALUE;
+            parserState=ParserState.INSIDE_VALUE;
+            bufpos=0;
+            return true;
+        }
+        if(c=='{') {
+            ctStack.push(ContainingType.OBJECT);
+            parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
+            listener.startObject();
+            return true;
+        }
+        if(c=='[') {
+            ctStack.push(ContainingType.ARRAY);
+            parserState=ParserState.EXPECTING_END_ARRAY_OR_VALUE;
+            listener.startArray();
+            return true;
+        }
+        if(c=='t' || c=='T') {
+            
+        }
+        if(c=='f' || c=='F') {
+            
+        }
+        if(c=='n' || c=='N') {
+            
+        }
+        if(Utils.isDigit(c)) {
+        }
+        return false;
     }
 
 }
