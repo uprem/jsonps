@@ -24,10 +24,10 @@ public class JsonParser {
         EXPECTING_NAME,
         EXPECTING_COLON,
         EXPECTING_VALUE,
-        EXPECTING_COMA_IN_OBJECT,
-        EXPECTING_COMA_IN_ARRAY,
-        EXPECTING_END_OBJECT_OR_COMA,
-        EXPECTING_END_ARRAY_OR_COMA,
+        EXPECTING_COMMA_IN_OBJECT,
+        EXPECTING_COMMA_IN_ARRAY,
+        EXPECTING_END_OBJECT_OR_COMMA,
+        EXPECTING_END_ARRAY_OR_COMMA,
         INSIDE_NAME,
         INSIDE_VALUE,
         INSIDE_SEQUENCE,
@@ -135,10 +135,10 @@ public class JsonParser {
                     if(strType==StringType.VALUE) {
                         listener.value(new String(buf, 0, bufpos));
                         if(ctStack.peek()==ContainingType.OBJECT) {
-                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMMA;
                         }
                         else {
-                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMMA;
                         }
                     }
                     break;
@@ -159,7 +159,7 @@ public class JsonParser {
                 }
                 break;
 
-            case EXPECTING_END_OBJECT_OR_COMA:
+            case EXPECTING_END_OBJECT_OR_COMMA:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='}') {
                     endObjectOrArray();
@@ -173,7 +173,7 @@ public class JsonParser {
                 raiseError(String.format("unexpected char:'%1$c'. expecting '}' or ','", c));
                 break;
 
-            case EXPECTING_END_ARRAY_OR_COMA:
+            case EXPECTING_END_ARRAY_OR_COMMA:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==']') {
                     endObjectOrArray();
@@ -216,8 +216,8 @@ public class JsonParser {
                     if(seqpos>=sequence.length()) {
                         listener.sequence(sequence);
                         switch(ctStack.peek()) {
-                            case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA; break;
-                            case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA; break;
+                            case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMMA; break;
+                            case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMMA; break;
                         }
                     }
                 }
@@ -241,8 +241,8 @@ public class JsonParser {
 
                 listener.number(new String(buf, 0, bufpos-1));
                 switch(ctStack.peek()) {
-                    case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA; break;
-                    case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA; break;
+                    case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMMA; break;
+                    case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMMA; break;
                 }
                 break;
 
@@ -258,8 +258,8 @@ public class JsonParser {
             parserState=ParserState.EXPECTING_EOF;
         } else {
             switch(ctStack.peek()) {
-                case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA; break;
-                case ARRAY : parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA; break;
+                case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMMA; break;
+                case ARRAY : parserState=ParserState.EXPECTING_END_ARRAY_OR_COMMA; break;
             }
         }
     }
