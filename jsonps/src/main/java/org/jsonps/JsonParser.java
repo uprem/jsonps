@@ -53,6 +53,7 @@ public class JsonParser {
     private final char[] buf=new char[10240];
     int bufpos;
     private StringType strType;
+    private boolean stringSequenceEscaped;
     private String sequence;
     private int seqpos;
 
@@ -94,6 +95,7 @@ public class JsonParser {
                 }
                 if(c=='"') {
                     parserState=ParserState.INSIDE_NAME;
+                    stringSequenceEscaped=false;
                     strType=StringType.NAME;
                     bufpos=0;
                     break;
@@ -122,7 +124,7 @@ public class JsonParser {
                 break;
 
             case INSIDE_NAME:
-                if(c=='"') {
+                if(!stringSequenceEscaped && c=='"') {
                     // end string;
                     // raise string event with string from buffer
                     if(strType==StringType.NAME) {
@@ -139,15 +141,21 @@ public class JsonParser {
                             parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
                         }
                     }
+                    break;
                 }
-                else {
-                    // append character to string buffer;
-                    if(bufpos>=buf.length) {
-                        raiseError("too long a string encountered. can deal with 8K max");
-                        break;
-                    }
-                    buf[bufpos]=c;
-                    bufpos++;
+
+                // append character to string buffer;
+                if(bufpos>=buf.length) {
+                    raiseError("too long a string encountered. can deal with 8K max");
+                    break;
+                }
+                buf[bufpos]=c;
+                bufpos++;
+                
+                if(stringSequenceEscaped) {
+                    stringSequenceEscaped=false;
+                } else {
+                    stringSequenceEscaped=(c=='\\');
                 }
                 break;
 
@@ -194,6 +202,7 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='"') {
                     parserState=ParserState.INSIDE_NAME;
+                    stringSequenceEscaped=false;
                     strType=StringType.NAME;
                     bufpos=0;
                     break;
@@ -263,6 +272,7 @@ public class JsonParser {
         if(c=='"') {
             strType=StringType.VALUE;
             parserState=ParserState.INSIDE_VALUE;
+            stringSequenceEscaped=false;
             bufpos=0;
             return true;
         }
