@@ -30,6 +30,7 @@ public class JsonParser {
         EXPECTING_END_ARRAY_OR_COMA,
         INSIDE_NAME,
         INSIDE_VALUE,
+        INSIDE_SEQUENCE,
         EXPECTING_EOF
     }
 
@@ -43,10 +44,16 @@ public class JsonParser {
         ARRAY
     }
 
+    private static final String SEQ_TRUE="true";
+    private static final String SEQ_FALSE="false";
+    private static final String SEQ_NULL="null";
+
     private ParserState parserState;
     private final char[] buf=new char[10240];
     int bufpos;
     private StringType strType;
+    private String sequence;
+    private int seqpos;
 
     private final JsonParsingEventListener listener;
 
@@ -193,6 +200,21 @@ public class JsonParser {
                 raiseError(String.format("unexpected char:'%1$c'. expecting '\"'", c));
                 break;
 
+            case INSIDE_SEQUENCE:
+                if(Character.toLowerCase(c)==sequence.charAt(seqpos)) {
+                    seqpos++;
+                    if(seqpos>=sequence.length()) {
+                        listener.sequence(sequence);
+                        switch(ctStack.peek()) {
+                            case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA; break;
+                            case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA; break;
+                        }
+                    }
+                }
+                else {
+                    raiseError(String.format("unexpected char:'%1$c'. expecting '%2$s'", c, sequence.charAt(seqpos)));
+                }
+                break;
 
             default:
                 logger.log(Level.SEVERE, "unhandled state:{0}", parserState);
@@ -236,13 +258,22 @@ public class JsonParser {
             return true;
         }
         if(c=='t' || c=='T') {
-
+            parserState=ParserState.INSIDE_SEQUENCE;
+            sequence=SEQ_TRUE;
+            seqpos=1;
+            return true;
         }
         if(c=='f' || c=='F') {
-
+            parserState=ParserState.INSIDE_SEQUENCE;
+            sequence=SEQ_FALSE;
+            seqpos=1;
+            return true;
         }
         if(c=='n' || c=='N') {
-
+            parserState=ParserState.INSIDE_SEQUENCE;
+            sequence=SEQ_NULL;
+            seqpos=1;
+            return true;
         }
         if(Utils.isDigit(c)) {
         }
