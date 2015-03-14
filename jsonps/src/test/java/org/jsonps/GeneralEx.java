@@ -38,7 +38,7 @@ public class GeneralEx {
 
     @Test
     public void manualEx() {
-        String json="{\"a\":\"yea!\", \"b\":\"bee\", \"newobj\":\"goood\",\"test\":[]}";
+        String json="{\"a\":\"y  e a!\", \"b\":\"bee\", \"newobj\":\"goood\",\"test\":[], \"t2\":{}}";
         JsonParsingEventListener eventListener=new JsonParsingEventListener();
         JsonParser jp;
         int i, len;
