@@ -98,6 +98,11 @@ public class PrettyPrintingListener extends JsonParsingEventListener {
     }
 
     @Override
+    public void endParsing() {
+        out.println();
+    }
+
+    @Override
     public void colon() { // name and val separator
         //logger.log(Level.INFO, "got colon");
     }

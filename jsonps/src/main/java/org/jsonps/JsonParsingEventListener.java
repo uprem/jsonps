@@ -16,6 +16,10 @@ public class JsonParsingEventListener {
 
     private static final Logger logger=Logger.getLogger(JsonParsingEventListener.class.getName());
 
+    public void startParsing() {
+        ;
+    }
+
     public void startObject() {
         logger.log(Level.INFO, "got start object");
     }
@@ -46,6 +50,10 @@ public class JsonParsingEventListener {
 
     public void number(String value) {
         logger.log(Level.INFO, "got number:[{0}]", value);
+    }
+
+    public void endParsing() {
+        ;
     }
 
     // below events are that primarily required for pretty printing?

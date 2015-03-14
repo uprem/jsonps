@@ -64,6 +64,7 @@ public class JsonParser {
     public JsonParser(JsonParsingEventListener listener) {
         this.listener=listener;
         parserState=ParserState.EXPECTING_START_OBJECT_OR_ARRAY;
+        listener.startParsing();
     }
 
     public void process(char c) {
@@ -152,7 +153,7 @@ public class JsonParser {
                 }
                 buf[bufpos]=c;
                 bufpos++;
-                
+
                 if(stringSequenceEscaped) {
                     stringSequenceEscaped=false;
                 } else {
@@ -254,6 +255,10 @@ public class JsonParser {
                 logger.log(Level.SEVERE, "unhandled state:{0}", parserState);
 
         }
+    }
+
+    public void close() {
+        listener.endParsing();
     }
 
     private void endObjectOrArray() {

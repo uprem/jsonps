@@ -90,6 +90,7 @@ public class GeneralEx {
         for(i=0;  i<len;  i++) {
             jp.process(buf[i]);
         }
+        jp.close();
     }
 
     private void testPrettyPrint(String json) {
@@ -104,6 +105,7 @@ public class GeneralEx {
         for(i=0;  i<len;  i++) {
             jp.process(buf[i]);
         }
+        jp.close();
     }
 
     private static enum ParsingEvent {
