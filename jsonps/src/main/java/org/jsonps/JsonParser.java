@@ -37,21 +37,20 @@ public class JsonParser {
         NAME,
         VALUE,
     }
-    
+
     private static enum ContainingType {
         OBJECT,
         ARRAY
     }
 
     private ParserState parserState;
-    private int lexerStatus;
-    private char[] buf=new char[10240];
+    private final char[] buf=new char[10240];
     int bufpos;
     private StringType strType;
-    
-    private JsonParsingEventListener listener;
 
-    private Stack<ContainingType> ctStack=new Stack<>();
+    private final JsonParsingEventListener listener;
+
+    private final Stack<ContainingType> ctStack=new Stack<>();
 
     public JsonParser(JsonParsingEventListener listener) {
         this.listener=listener;
@@ -64,14 +63,12 @@ public class JsonParser {
             case EXPECTING_START_OBJECT_OR_ARRAY:
                 if(Utils.isWhiteSpace(c)) break;
                 if(c=='{') {
-                    //psStack.push(parserState);
                     ctStack.push(ContainingType.OBJECT);
                     parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
                     listener.startObject();
                     break;
                 }
                 if(c=='[') {
-                    //psStack.push(parserState);
                     ctStack.push(ContainingType.ARRAY);
                     parserState=ParserState.EXPECTING_END_ARRAY_OR_VALUE;
                     listener.startArray();
@@ -115,27 +112,6 @@ public class JsonParser {
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ':'", c));
                 break;
-
-            /*
-            case EXPECTING_COMA_IN_OBJECT:
-                if(Utils.isWhiteSpace(c)) break;
-                if(c==',') {
-                    parserState=ParserState.EXPECTING_NAME;
-                    break;
-                }
-                raiseError(String.format("unexpected char:'%1$c'. expecting ','", c));
-                break;
-
-            case EXPECTING_COMA_IN_ARRAY:
-                if(Utils.isWhiteSpace(c)) break;
-                if(c==',') {
-                    parserState=ParserState.EXPECTING_VALUE;
-                    strType=StringType.ARR_VALUE;
-                    break;
-                }
-                raiseError(String.format("unexpected char:'%1$c'. expecting ','", c));
-                break;
-            */
 
             case INSIDE_NAME:
                 if(c=='"') {
@@ -216,8 +192,8 @@ public class JsonParser {
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting '\"'", c));
                 break;
-                
-                
+
+
             default:
                 logger.log(Level.SEVERE, "unhandled state:{0}", parserState);
 
@@ -225,36 +201,6 @@ public class JsonParser {
     }
 
     private void endObjectOrArray() {
-        /*
-        ParserState ps;
-
-        switch(ps=psStack.pop()) {
-            case EXPECTING_START_OBJECT_OR_ARRAY:
-                parserState=ParserState.EXPECTING_EOF;
-                break;
-            case EXPECTING_COLON:
-                parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
-                break;
-            case EXPECTING_END_ARRAY_OR_VALUE:
-                parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                break;
-            case EXPECTING_END_ARRAY_OR_COMA:
-                parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
-                break;
-            case EXPECTING_VALUE:
-                if(psStack.peek()==ParserState.EXPECTING_COLON) {
-                    parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
-                }
-                if(psStack.peek()==ParserState.EXPECTING_END_ARRAY_OR_COMA) {
-                    parserState=ParserState.EXPECTING_VALUE;
-                }
-                break;
-            default:
-                raiseError("internal error.");
-                logger.log(Level.SEVERE, "got unexpected state from stack:{0}", ps.name());
-        }
-        */
-        
         ctStack.pop();
         if(ctStack.isEmpty()) {
             parserState=ParserState.EXPECTING_EOF;
@@ -290,13 +236,13 @@ public class JsonParser {
             return true;
         }
         if(c=='t' || c=='T') {
-            
+
         }
         if(c=='f' || c=='F') {
-            
+
         }
         if(c=='n' || c=='N') {
-            
+
         }
         if(Utils.isDigit(c)) {
         }
