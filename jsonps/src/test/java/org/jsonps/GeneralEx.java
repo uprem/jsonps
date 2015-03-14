@@ -44,44 +44,40 @@ public class GeneralEx {
     @Test
     public void exercizeParser() {
         String json="{\"a\":\"y  e a!\", \"b\":\"bee\\\"\", \"newobj\":\"go\\\"ood\",\"test\":[{\"arrayname\":[]}], \"t2\":{ \"num\":0.23e-3}, \"bool\":   trUe, \"nullname\":nuLl, \"nottrue\":False}";
-        int[] expEventSeq={
-            TestListener.EVENT_STARTOBJ,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_VALUE,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_VALUE,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_VALUE, // "go\"ood"
-
-            TestListener.EVENT_NAME,   // "test"
-            TestListener.EVENT_STARTARR,
-            TestListener.EVENT_STARTOBJ,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_STARTARR,
-            TestListener.EVENT_ENDARR,
-            TestListener.EVENT_ENDOBJ,
-            TestListener.EVENT_ENDARR,
-
-            TestListener.EVENT_NAME,  // "t2"
-            TestListener.EVENT_STARTOBJ,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_NUM,
-            TestListener.EVENT_ENDOBJ,
-
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_SEQ,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_SEQ,
-            TestListener.EVENT_NAME,
-            TestListener.EVENT_SEQ,
-
-            TestListener.EVENT_ENDOBJ,
+        Expected[] expEventSeq={
+            new Expected(TestListener.EVENT_STARTOBJ,         ""),
+            new Expected(TestListener.EVENT_NAME,             "a"),
+            new Expected(TestListener.EVENT_VALUE,            "y  e a!"),
+            new Expected(TestListener.EVENT_NAME,             "b"),
+            new Expected(TestListener.EVENT_VALUE,            "bee\\\""),
+            new Expected(TestListener.EVENT_NAME,             "newobj"),
+            new Expected(TestListener.EVENT_VALUE,            "go\\\"ood"), // "go\"ood"
+            new Expected(TestListener.EVENT_NAME,             "test"), // "test"
+            new Expected(TestListener.EVENT_STARTARR,         ""),
+            new Expected(TestListener.EVENT_STARTOBJ,         ""),
+            new Expected(TestListener.EVENT_NAME,             "arrayname"),
+            new Expected(TestListener.EVENT_STARTARR,         ""),
+            new Expected(TestListener.EVENT_ENDARR,           ""),
+            new Expected(TestListener.EVENT_ENDOBJ,           ""),
+            new Expected(TestListener.EVENT_ENDARR,           ""),
+            new Expected(TestListener.EVENT_NAME,             "t2"), // "t2"
+            new Expected(TestListener.EVENT_STARTOBJ,         ""),
+            new Expected(TestListener.EVENT_NAME,             "num"),
+            new Expected(TestListener.EVENT_NUM,              "0.23e-3"),
+            new Expected(TestListener.EVENT_ENDOBJ,           ""),
+            new Expected(TestListener.EVENT_NAME,             "bool"), //bool
+            new Expected(TestListener.EVENT_SEQ,              "true"),
+            new Expected(TestListener.EVENT_NAME,             "nullname"),
+            new Expected(TestListener.EVENT_SEQ,              "null"),
+            new Expected(TestListener.EVENT_NAME,             "nottrue"),
+            new Expected(TestListener.EVENT_SEQ,              "false"),
+            new Expected(TestListener.EVENT_ENDOBJ,           ""),
         };
 
         testInstance(json, expEventSeq);
     }
 
-    public void testInstance(String json, int[] expEventSeq) {
+    public void testInstance(String json, Expected[] expEventSeq) {
         JsonParsingEventListener eventListener=new TestListener(expEventSeq);
         JsonParser jp;
         int i, len;
@@ -92,6 +88,16 @@ public class GeneralEx {
         len=json.length();
         for(i=0;  i<len;  i++) {
             jp.process(buf[i]);
+        }
+    }
+    
+    private static class Expected {
+        int event;
+        String strValue;
+
+        public Expected(int event, String strValue) {
+            this.event = event;
+            this.strValue = strValue;
         }
     }
 
@@ -105,59 +111,71 @@ public class GeneralEx {
         static final int EVENT_SEQ      = 7;
         static final int EVENT_NUM      = 8;
 
-        private final int[] expectedEventSeq;
+        private final Expected[] expectedEventSeq;
         private int nextExpectedEventIdx=0;
 
-        private TestListener(int[] expectedEventSeq) {
+        private TestListener(Expected[] expectedEventSeq) {
             this.expectedEventSeq=expectedEventSeq;
         }
 
         @Override
         public void startObject() {
             logger.log(Level.INFO, "got start object");
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_STARTOBJ);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_STARTOBJ);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void endObject() {
             logger.log(Level.INFO, "got end object");
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_ENDOBJ);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_ENDOBJ);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void startArray() {
             logger.log(Level.INFO, "got start array");
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_STARTARR);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_STARTARR);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void endArray() {
             logger.log(Level.INFO, "got end array");
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_ENDARR);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_ENDARR);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void name(String name) {
             logger.log(Level.INFO, "got name:[{0}]", name);
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_NAME);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_NAME);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].strValue, name);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void value(String value) {
             logger.log(Level.INFO, "got value:[{0}]", value);
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_VALUE);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_VALUE);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].strValue, value);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void sequence(String value) {
             logger.log(Level.INFO, "got sequence:[{0}]", value);
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_SEQ);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_SEQ);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].strValue, value);
+            nextExpectedEventIdx++;
         }
 
         @Override
         public void number(String value) {
             logger.log(Level.INFO, "got number:[{0}]", value);
-            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx++], EVENT_NUM);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].event, EVENT_NUM);
+            Assert.assertEquals(expectedEventSeq[nextExpectedEventIdx].strValue, value);
+            nextExpectedEventIdx++;
         }
     }
 }
