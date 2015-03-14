@@ -43,4 +43,8 @@ public class JsonParsingEventListener {
     public void sequence(String value) {
         logger.log(Level.INFO, "got sequence:[{0}]", value);
     }
+
+    public void number(String value) {
+        logger.log(Level.INFO, "got number:[{0}]", value);
+    }
 }

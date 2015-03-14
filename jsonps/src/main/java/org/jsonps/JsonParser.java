@@ -31,6 +31,7 @@ public class JsonParser {
         INSIDE_NAME,
         INSIDE_VALUE,
         INSIDE_SEQUENCE,
+        INSIDE_NUMBER,
         EXPECTING_EOF
     }
 
@@ -216,6 +217,26 @@ public class JsonParser {
                 }
                 break;
 
+            case INSIDE_NUMBER:
+                buf[bufpos]=c;
+                bufpos++;
+                if(Character.isDigit(c)) break;
+                if(Character.toLowerCase(c)=='e') break;
+                if(c=='+') break;
+                if(c=='-') break;
+                if(c=='.') break;
+
+                //if(bufpos==1) {
+                //    raiseError(String.format("unexpected char:'%1$c'. expecting number", c));
+                //}
+
+                listener.number(new String(buf, 0, bufpos-1));
+                switch(ctStack.peek()) {
+                    case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA; break;
+                    case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA; break;
+                }
+                break;
+
             default:
                 logger.log(Level.SEVERE, "unhandled state:{0}", parserState);
 
@@ -276,6 +297,10 @@ public class JsonParser {
             return true;
         }
         if(Utils.isDigit(c)) {
+            parserState=ParserState.INSIDE_NUMBER;
+            buf[0]=c;
+            bufpos=1;
+            return true;
         }
         return false;
     }
