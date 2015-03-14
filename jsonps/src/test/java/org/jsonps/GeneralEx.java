@@ -75,10 +75,25 @@ public class GeneralEx {
         };
 
         testInstance(json, expEventSeq);
+        testPrettyPrint(json);
     }
 
     private void testInstance(String json, Expected[] expEventSeq) {
         JsonParsingEventListener eventListener=new TestListener(expEventSeq);
+        JsonParser jp;
+        int i, len;
+        char[] buf=json.toCharArray();
+
+        jp=new JsonParser(eventListener);
+
+        len=json.length();
+        for(i=0;  i<len;  i++) {
+            jp.process(buf[i]);
+        }
+    }
+
+    private void testPrettyPrint(String json) {
+        JsonParsingEventListener eventListener=new PrettyPrintingListener(System.out);
         JsonParser jp;
         int i, len;
         char[] buf=json.toCharArray();
