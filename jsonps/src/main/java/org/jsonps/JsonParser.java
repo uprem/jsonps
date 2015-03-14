@@ -117,9 +117,9 @@ public class JsonParser {
                     break;
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
-                    parserState=ParserState.INSIDE_VALUE;
                     strType=StringType.ARR_VALUE;
-                    valType=vt;
+                    parserState=ParserState.EXPECTING_VALUE;
+                    process(c);
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or start of value", c));
