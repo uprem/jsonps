@@ -70,7 +70,7 @@ public class JsonParser {
 
         switch(parserState) {
             case EXPECTING_START_OBJECT_OR_ARRAY:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c=='{') {
                     ctStack.push(ContainingType.OBJECT);
                     parserState=ParserState.EXPECTING_END_OBJECT_OR_NAME;
@@ -87,7 +87,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_END_OBJECT_OR_NAME:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c=='}') {
                     endObjectOrArray();
                     listener.endObject();
@@ -104,7 +104,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_END_ARRAY_OR_VALUE:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c==']') {
                     endObjectOrArray();
                     listener.endArray();
@@ -115,7 +115,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_COLON:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c==':') {
                     parserState=ParserState.EXPECTING_VALUE;
                     break;
@@ -160,7 +160,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_END_OBJECT_OR_COMMA:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c=='}') {
                     endObjectOrArray();
                     listener.endObject();
@@ -174,7 +174,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_END_ARRAY_OR_COMMA:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c==']') {
                     endObjectOrArray();
                     listener.endArray();
@@ -188,7 +188,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_VALUE:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(startOfValue(c)) break;
                 raiseError(String.format("unexpected char:'%1$c'. expecting value", c));
                 break;
@@ -199,7 +199,7 @@ public class JsonParser {
                 break;
 
             case EXPECTING_NAME:
-                if(Utils.isWhiteSpace(c)) break;
+                if(Character.isWhitespace(c)) break;
                 if(c=='"') {
                     parserState=ParserState.INSIDE_NAME;
                     stringSequenceEscaped=false;
@@ -307,7 +307,7 @@ public class JsonParser {
             seqpos=1;
             return true;
         }
-        if(Utils.isDigit(c)) {
+        if(Character.isDigit(c)) {
             parserState=ParserState.INSIDE_NUMBER;
             buf[0]=c;
             bufpos=1;
