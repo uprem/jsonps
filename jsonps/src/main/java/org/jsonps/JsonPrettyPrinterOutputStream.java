@@ -7,6 +7,7 @@ package org.jsonps;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
  *
@@ -15,14 +16,27 @@ import java.io.OutputStream;
 public class JsonPrettyPrinterOutputStream extends OutputStream {
 
     private OutputStream targetOS;
+    private PrintStream out;
+    private JsonParsingEventListener eventListener;
+    private JsonParser jp;
 
     public JsonPrettyPrinterOutputStream(OutputStream targetOS) {
         this.targetOS=targetOS;
+
+        out=new PrintStream(targetOS);
+        eventListener=new PrettyPrintingListener(out);
+        jp=new JsonParser(eventListener);
     }
 
     @Override
     public void write(int b) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        jp.process((char)b);
+    }
+
+    @Override
+    public void close() {
+        jp.close();
+        out.close();
     }
 
 }

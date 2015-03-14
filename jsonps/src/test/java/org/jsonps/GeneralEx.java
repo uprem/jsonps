@@ -5,6 +5,7 @@
  */
 package org.jsonps;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -74,8 +75,11 @@ public class GeneralEx {
             new Expected(ParsingEvent.ENDOBJ,           ""),
         };
 
-        testInstance(json, expEventSeq);
-        testPrettyPrint(json);
+        //testInstance(json, expEventSeq);
+        //testPrettyPrint(json);
+        try { testPPOS(json); } catch(IOException ioe) {
+            ioe.printStackTrace();
+        }
     }
 
     private void testInstance(String json, Expected[] expEventSeq) {
@@ -106,6 +110,14 @@ public class GeneralEx {
             jp.process(buf[i]);
         }
         jp.close();
+    }
+
+    private void testPPOS(String json) throws IOException {
+        JsonPrettyPrinterOutputStream ppos;
+
+        ppos=new JsonPrettyPrinterOutputStream(System.out);
+        ppos.write(json.getBytes());
+        ppos.close();
     }
 
     private static enum ParsingEvent {
