@@ -45,8 +45,7 @@ public class JsonParser {
 
     private static enum StringType {
         NAME,
-        OBJ_VALUE,
-        ARR_VALUE
+        VALUE,
     }
     
     private static enum ContainingType {
@@ -117,7 +116,6 @@ public class JsonParser {
                     break;
                 }
                 if((vt=startOfValue(c))!=ValueType.NONE) {
-                    strType=StringType.ARR_VALUE;
                     parserState=ParserState.EXPECTING_VALUE;
                     process(c);
                     break;
@@ -129,7 +127,6 @@ public class JsonParser {
                 if(Utils.isWhiteSpace(c)) break;
                 if(c==':') {
                     parserState=ParserState.EXPECTING_VALUE;
-                    strType=StringType.OBJ_VALUE;
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ':'", c));
@@ -165,13 +162,14 @@ public class JsonParser {
                         parserState=ParserState.EXPECTING_COLON;
                     }
                     else
-                    if(strType==StringType.OBJ_VALUE) {
+                    if(strType==StringType.VALUE) {
                         listener.value(new String(buf, 0, bufpos));
-                        parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
-                    }
-                    else {
-                        listener.value(new String(buf, 0, bufpos));
-                        parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                        if(ctStack.peek()==ContainingType.OBJECT) {
+                            parserState=ParserState.EXPECTING_END_OBJECT_OR_COMA;
+                        }
+                        else {
+                            parserState=ParserState.EXPECTING_END_ARRAY_OR_COMA;
+                        }
                     }
                 }
                 else {
@@ -208,7 +206,6 @@ public class JsonParser {
                 }
                 if(c==',') {
                     parserState=ParserState.EXPECTING_VALUE;
-                    strType=StringType.ARR_VALUE;
                     break;
                 }
                 raiseError(String.format("unexpected char:'%1$c'. expecting ']' or ','", c));
@@ -232,6 +229,7 @@ public class JsonParser {
                         listener.startArray();
                     }
                     if(valType==ValueType.STRING) {
+                        strType=StringType.VALUE;
                         parserState=ParserState.INSIDE_VALUE;
                         bufpos=0;
                     }
