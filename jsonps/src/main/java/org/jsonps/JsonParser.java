@@ -244,6 +244,7 @@ public class JsonParser {
                     case OBJECT: parserState=ParserState.EXPECTING_END_OBJECT_OR_COMMA; break;
                     case ARRAY:  parserState=ParserState.EXPECTING_END_ARRAY_OR_COMMA; break;
                 }
+                process(c);
                 break;
 
             default:

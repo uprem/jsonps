@@ -74,6 +74,8 @@ public class GeneralEx {
             TestListener.EVENT_SEQ,
             TestListener.EVENT_NAME,
             TestListener.EVENT_SEQ,
+
+            TestListener.EVENT_ENDOBJ,
         };
 
         testInstance(json, expEventSeq);
